@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="loginScreen">
+    <h2>🔐 Admin Login</h2>
+    <input type="password" id="adminPass" placeholder="Enter Password" />
+    <button onclick="checkPassword()">Login</button>
+  </div>
+
+  <div id="adminPanel" style="display:none; max-width: 600px; margin: 20px auto;">
+    <h2>Admin Panel</h2>
+    <p><strong>Select Unit:</strong></p>
+    <select id="adminUnitSelect">
+      <option value="unit1">Unit 1</option>
+      <option value="unit2">Unit 2</option>
+      <option value="unit3">Unit 3</option>
+      <option value="unit4">Unit 4</option>
+      <option value="unit5">Unit 5</option>
+      <option value="unit6">Unit 6</option>
+      <option value="unit7">Unit 7</option>
+      <option value="unit8">Unit 8</option>
+      <option value="unit9">Unit 9</option>
+    </select>
+    <div id="pendingList"></div>
+  </div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>
