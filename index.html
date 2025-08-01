@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Book Housing Unit</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+<body>
+  <h1>📅 Book a Stay</h1>
+  <p><strong>Select your unit:</strong></p>
+  <select id="unitSelect">
+    <option value="unit1">Unit 1</option>
+    <option value="unit2">Unit 2</option>
+    <option value="unit3">Unit 3</option>
+    <option value="unit4">Unit 4</option>
+    <option value="unit5">Unit 5</option>
+    <option value="unit6">Unit 6</option>
+    <option value="unit7">Unit 7</option>
+    <option value="unit8">Unit 8</option>
+    <option value="unit9">Unit 9</option>
+  </select>
+
+  <div id="calendar"></div>
+
+  <form id="bookingForm">
+    <input type="text" id="name" placeholder="Your Full Name" required />
+    <input type="tel" id="phone" placeholder="Phone Number" required />
+    <input type="hidden" id="dates" />
+    <button type="submit">Request Booking</button>
+  </form>
+
+  <div id="status"></div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
