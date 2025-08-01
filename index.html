@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Check Availability & Book</title>
+  <title>Housing Unit Booking</title>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="manifest" href="manifest.json" />
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <!-- We'll load Flatpickr CSS here, but JS at bottom for reliability -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css" />
 </head>
 <body>
   <h1>🏡 Housing Unit Booking</h1>
@@ -26,17 +26,14 @@
 
   <h2>📅 Availability Calendar</h2>
   <p>
-    <strong>Green</strong> = Available • 
-    <strong>Orange</strong> = Pending • 
-    <strong>Blue</strong> = Booked • 
-    <strong>Gray</strong> = Past
+    <strong>🟢 Green</strong> = Available • 
+    <strong>🟠 Orange</strong> = Pending • 
+    <strong>🔵 Blue</strong> = Booked • 
+    <strong>⚫ Gray</strong> = Past
   </p>
-
-  <!-- This will show the full calendar -->
   <div id="calendar" style="margin: 20px 0;"></div>
 
   <h2>📝 Request a Booking</h2>
-  <p>Select dates on the calendar above, then fill in your details:</p>
   <form id="bookingForm">
     <input type="text" id="name" placeholder="Your Full Name" required />
     <input type="tel" id="phone" placeholder="Phone Number" required />
@@ -46,6 +43,9 @@
 
   <div id="status"></div>
 
-  <script src="js/main.js"></script>
+  <!-- ✅ Load Flatpickr JS after the page content -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+  <!-- ✅ Load your app logic after Flatpickr -->
+  <script src="js/main.js" defer></script>
 </body>
 </html>
