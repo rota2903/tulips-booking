@@ -1,4 +1,4 @@
-const CORRECT_PASSWORD = "admin123"; // 🔒 CHANGE THIS!
+const CORRECT_PASSWORD = "norkass999"; // 🔒 CHANGE THIS!
 
 function checkPassword() {
   const pass = document.getElementById('adminPass').value;
