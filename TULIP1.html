@@ -128,10 +128,8 @@
   </div>
 
   <h2>📅 Availability Calendar</h2>
-  <table id="calendar">
-    <tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr>
-  </table>
-
+  <div id="calendar"></div>
+  
   <!-- Booking Form -->
   <div id="bookingSection">
     <h2>📝 Request Booking</h2>
@@ -216,62 +214,100 @@
     }
 
     // Generate 3-month calendar
-    function generateCalendar() {
-      const today = new Date();
-      const bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-      calendar.innerHTML = '<tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr>';
-      let row = document.createElement('tr');
+    // Generate 3-month calendar with month names
+function generateCalendar() {
+  const today = new Date();
+  const bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  const calendar = document.getElementById('calendar');
+  calendar.innerHTML = ''; // Clear
 
-      for (let i = 0; i < 90; i++) {
-        const d = new Date();
-        d.setDate(today.getDate() + i);
-        const dateStr = d.toISOString().split('T')[0];
-        const cell = document.createElement('td');
-        cell.textContent = d.getDate();
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-        if (i === 0) {
-          const dayOfWeek = d.getDay();
-          for (let j = 0; j < dayOfWeek; j++) {
-            row.appendChild(document.createElement('td'));
-          }
-        }
+  // Generate next 3 months
+  for (let m = 0; m < 3; m++) {
+    const monthDate = new Date(today.getFullYear(), today.getMonth() + m);
+    const month = monthDate.getMonth();
+    const year = monthDate.getFullYear();
 
-        if (d < today && d.setHours(0,0,0,0) < today.setHours(0,0,0,0)) {
-          cell.className = 'past';
+    // Create month header
+    const monthHeader = document.createElement('h3');
+    monthHeader.textContent = `${monthNames[month]} ${year}`;
+    monthHeader.style = "margin: 20px 0 10px 0; color: #2c3e50;";
+    calendar.appendChild(monthHeader);
+
+    // Create table
+    const table = document.createElement('table');
+    table.style = "width:100%; border-collapse:collapse; margin-bottom:30px;";
+    const thead = document.createElement('thead');
+    thead.innerHTML = '<tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr>';
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+
+    // Get first day of month
+    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun, 1=Mon...
+    const daysInMonth = new Date(year, month + 1, 0).getDate(); // Last day
+
+    let row = document.createElement('tr');
+
+    // Empty cells before first day
+    for (let i = 0; i < firstDay; i++) {
+      const cell = document.createElement('td');
+      cell.className = 'empty';
+      row.appendChild(cell);
+    }
+
+    // Days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const cell = document.createElement('td');
+      cell.textContent = day;
+
+      const dateObj = new Date(year, month, day);
+      const dateStr = dateObj.toISOString().split('T')[0];
+
+      // Past date
+      if (dateObj < today && dateObj.setHours(0,0,0,0) < today.setHours(0,0,0,0)) {
+        cell.className = 'past';
+      } else {
+        const booking = bookings.find(b => b.dates.includes(dateStr));
+        if (booking && booking.status === 'approved') {
+          cell.className = 'approved';
+          cell.title = `Booked: ${booking.name}`;
+          const info = document.createElement('div');
+          info.className = 'booking-info';
+          info.textContent = booking.name;
+          cell.appendChild(info);
+        } else if (booking && booking.status === 'pending') {
+          cell.className = 'pending';
+          cell.title = `Pending: ${booking.name}`;
         } else {
-          const booking = bookings.find(b => b.dates.includes(dateStr));
-          if (booking && booking.status === 'approved') {
-            cell.className = 'approved';
-            cell.title = `Booked: ${booking.name}`;
-            const info = document.createElement('div');
-            info.className = 'booking-info';
-            info.textContent = booking.name;
-            cell.appendChild(info);
-          } else if (booking && booking.status === 'pending') {
-            cell.className = 'pending';
-            cell.title = `Pending: ${booking.name}`;
-          } else {
-            cell.className = 'open';
-            cell.onclick = () => {
-              if (selectedDates.includes(dateStr)) {
-                selectedDates = selectedDates.filter(d => d !== dateStr);
-                cell.style.opacity = '1';
-              } else {
-                selectedDates.push(dateStr);
-                cell.style.opacity = '0.5';
-              }
-              document.getElementById('dates').value = selectedDates.join(', ');
-            };
-          }
-        }
-        row.appendChild(cell);
-
-        if (d.getDay() === 6 || i === 89) {
-          calendar.appendChild(row);
-          row = document.createElement('tr');
+          cell.className = 'open';
+          cell.onclick = () => {
+            if (selectedDates.includes(dateStr)) {
+              selectedDates = selectedDates.filter(d => d !== dateStr);
+              cell.style.opacity = '1';
+            } else {
+              selectedDates.push(dateStr);
+              cell.style.opacity = '0.5';
+            }
+            document.getElementById('dates').value = selectedDates.join(', ');
+          };
         }
       }
+      row.appendChild(cell);
+
+      // New row every Saturday
+      if ((day + firstDay) % 7 === 0 || day === daysInMonth) {
+        tbody.appendChild(row);
+        row = document.createElement('tr');
+      }
     }
+
+    table.appendChild(tbody);
+    calendar.appendChild(table);
+  }
+}
 
     // Form submission
     document.getElementById('bookingForm').addEventListener('submit', function(e) {
