@@ -49,10 +49,12 @@
     .open { background: #2ecc71; color: white; cursor: pointer; }
     .pending { background: #f39c12; color: white; }
     .approved { background: #3498db; color: white; }
-    .approved:hover { 
-      position: relative; 
-      z-index: 1; 
-      transform: scale(1.1); 
+    .my-booking {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 15px 0;
     }
     input, button {
       padding: 12px;
@@ -87,7 +89,6 @@
       padding: 10px;
       background: #d5f5e3;
       border-radius: 5px;
-      display: none;
     }
     .legend {
       margin: 15px 0;
@@ -131,18 +132,28 @@
     <tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr>
   </table>
 
-  <h2>📝 Request Booking</h2>
-  <form id="bookingForm">
-    <input type="text" id="name" placeholder="Your Full Name" required />
-    <input type="tel" id="phone" placeholder="Phone Number (e.g. +62812345678)" required />
-    <input type="hidden" id="dates" />
-    <button type="submit">Request Booking</button>
-  </form>
+  <!-- Booking Form -->
+  <div id="bookingSection">
+    <h2>📝 Request Booking</h2>
+    <form id="bookingForm">
+      <input type="text" id="name" placeholder="Your Full Name" required />
+      <input type="tel" id="phone" placeholder="Phone Number (e.g. +62812345678)" required />
+      <input type="hidden" id="dates" />
+      <button type="submit">Request Booking</button>
+    </form>
+    <div id="status"></div>
+    <p><a href="#" onclick="showAdmin(); return false;">👉 Admin Login</a></p>
+  </div>
 
-  <div id="status"></div>
+  <!-- Manage Booking UI (shown only when ?booking=ID is in URL) -->
+  <div id="manageBooking" style="display:none;">
+    <h2>🛠️ Manage Your Booking</h2>
+    <div id="bookingDetails"></div>
+    <button onclick="cancelBooking()" class="btn-delete">🗑️ Cancel Booking</button>
+    <p><a href="TULIP1.html">← Back to Availability</a></p>
+  </div>
 
-  <p><a href="#" onclick="showAdmin(); return false;">👉 Admin Login</a></p>
-
+  <!-- Admin Panel -->
   <div id="adminPanel" style="display:none;">
     <h2>🔐 Admin Panel</h2>
     <input type="password" id="adminPass" placeholder="Enter Password" />
@@ -155,9 +166,7 @@
       <h3>✅ Approved Booking</h3>
       <div id="approvedList"></div>
 
-      <p>
-        <button onclick="logout()" class="btn-logout">🔐 Logout</button>
-      </p>
+      <p><button onclick="logout()" class="btn-logout">🔐 Logout</button></p>
     </div>
   </div>
 
@@ -168,9 +177,43 @@
 
     const calendar = document.getElementById('calendar');
     const statusDiv = document.getElementById('status');
+    const bookingSection = document.getElementById('bookingSection');
+    const manageBooking = document.getElementById('manageBooking');
+    const bookingDetails = document.getElementById('bookingDetails');
     const adminPanel = document.getElementById('adminPanel');
     const adminContent = document.getElementById('adminContent');
     const adminPass = document.getElementById('adminPass');
+
+    // Parse URL parameter: ?booking=123456789
+    function getUrlParam(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
+
+    // Check if we're in "manage booking" mode
+    const bookingId = getUrlParam('booking');
+    if (bookingId) {
+      bookingSection.style.display = 'none';
+      adminPanel.style.display = 'none';
+      manageBooking.style.display = 'block';
+
+      const bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      const myBooking = bookings.find(b => b.id == bookingId);
+
+      if (myBooking) {
+        bookingDetails.innerHTML = `
+          <strong>Status:</strong> ${myBooking.status === 'approved' ? '✅ Approved' : '🕒 Pending'}<br>
+          <strong>Name:</strong> ${myBooking.name}<br>
+          <strong>Phone:</strong> ${myBooking.phone}<br>
+          <strong>Dates:</strong> ${myBooking.dates.join(', ')}<br>
+          <p style="margin-top:15px; font-size:14px;">
+            To change dates, cancel this booking and make a new one.
+          </p>
+        `;
+      } else {
+        bookingDetails.innerHTML = `<p style="color:red;">❌ Booking not found. It may have been canceled.</p>`;
+      }
+    }
 
     // Generate 3-month calendar
     function generateCalendar() {
@@ -199,7 +242,7 @@
           const booking = bookings.find(b => b.dates.includes(dateStr));
           if (booking && booking.status === 'approved') {
             cell.className = 'approved';
-            cell.title = `Booked: ${booking.name}\nPhone: ${booking.phone}`;
+            cell.title = `Booked: ${booking.name}`;
             const info = document.createElement('div');
             info.className = 'booking-info';
             info.textContent = booking.name;
@@ -247,18 +290,28 @@
       }
 
       const bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-      bookings.push({
+      const newBooking = {
         id: Date.now(),
         name,
         phone,
         dates: selectedDates,
         status: 'pending'
-      });
+      };
+      bookings.push(newBooking);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
 
+      // Show success + Manage Booking Link
+      statusDiv.innerHTML = `
+        <p>✅ Thank you, ${name}! Your booking is pending approval.</p>
+        <div class="my-booking">
+          <strong>📌 Save this link to manage your booking:</strong><br>
+          <a href="TULIP1.html?booking=${newBooking.id}" style="color:#c0392b; font-weight:bold;">
+            TULIP1.html?booking=${newBooking.id}
+          </a><br>
+          <small>You can cancel or view your booking using this link.</small>
+        </div>
+      `;
       statusDiv.style.display = "block";
-      statusDiv.innerHTML = `✅ Thank you, ${name}! Your request is pending approval.`;
-      setTimeout(() => statusDiv.style.display = "none", 3000);
 
       generateCalendar();
     });
@@ -290,7 +343,6 @@
       const pending = bookings.filter(b => b.status === 'pending');
       const approved = bookings.filter(b => b.status === 'approved');
 
-      // Load Pending
       const pendingDiv = document.getElementById('pendingList');
       pendingDiv.innerHTML = "";
       if (pending.length === 0) {
@@ -309,7 +361,6 @@
         });
       }
 
-      // Load Approved
       const approvedDiv = document.getElementById('approvedList');
       approvedDiv.innerHTML = "";
       if (approved.length === 0) {
@@ -329,55 +380,39 @@
       }
     }
 
-    // ✅ Approve + Auto-Cancel Conflicting Pending Bookings
+    // Approve + Auto-Cancel Conflicting Pending
     function approve(id) {
       let bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       const bookingToApprove = bookings.find(b => b.id == id);
       if (!bookingToApprove) return;
 
-      // Check if any dates are already approved (shouldn't happen, but safe)
       const conflict = bookings.some(b =>
         b.status === 'approved' &&
         b.dates.some(date => bookingToApprove.dates.includes(date))
       );
-
       if (conflict) {
-        alert("❌ These dates are already booked. Please refresh.");
+        alert("❌ Dates already booked.");
         loadAllBookings();
         return;
       }
 
-      // Find all pending bookings that overlap with these dates
       const overlappingPending = bookings.filter(b =>
         b.status === 'pending' &&
         b.id != id &&
         b.dates.some(date => bookingToApprove.dates.includes(date))
       );
 
-      // Approve the selected booking
       bookingToApprove.status = 'approved';
-
-      // Remove all overlapping pending bookings
       bookings = bookings.filter(b => {
-        if (b.status === 'pending' && overlappingPending.some(p => p.id === b.id)) {
-          return false; // remove
-        }
-        return true;
+        return !overlappingPending.some(p => p.id === b.id);
       });
 
-      // Save updated list
       localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
-
-      // Feedback
-      const count = overlappingPending.length;
-      alert(`✅ Approved: ${bookingToApprove.name}\n${count > 0 ? `❌ Auto-canceled ${count} other request(s) for these dates.` : ''}`);
-
-      // Refresh UI
+      alert(`✅ Approved: ${bookingToApprove.name}\n${overlappingPending.length} request(s) canceled.`);
       loadAllBookings();
       generateCalendar();
     }
 
-    // Delete a pending or approved booking
     function reject(id) {
       let bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       bookings = bookings.filter(b => b.id != id);
@@ -394,6 +429,27 @@
       alert("❌ Booking canceled.");
       loadAllBookings();
       generateCalendar();
+    }
+
+    // Customer cancels their own booking
+    function cancelBooking() {
+      if (!bookingId) return;
+
+      const bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      const booking = bookings.find(b => b.id == bookingId);
+
+      if (!booking) {
+        alert("❌ Booking not found or already canceled.");
+        return;
+      }
+
+      if (confirm(`Are you sure you want to cancel your booking for ${booking.dates.join(', ')}?`)) {
+        const updated = bookings.filter(b => b.id != bookingId);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        alert("✅ Your booking has been canceled.");
+        bookingDetails.innerHTML = "<p>Your booking has been canceled.</p>";
+        generateCalendar();
+      }
     }
 
     // Initialize
