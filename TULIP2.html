@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TULIP 2 Booking</title>
+  <title>TULIP 1 Booking</title>
   <style>
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -120,9 +120,12 @@
   </style>
 </head>
 <body>
+  <!-- Back to Dashboard -->
   <a href="index.html" class="back-btn">← Back to Dashboard</a>
-  <h1>🏡 TULIP 2 Booking</h1>
 
+  <h1>🏡 TULIP 1 Booking</h1>
+
+  <!-- Legend -->
   <div class="legend">
     <div><span style="background:#2ecc71"></span>Available</div>
     <div><span style="background:#f39c12"></span>Pending</div>
@@ -130,9 +133,11 @@
     <div><span style="background:#ccc"></span>Past</div>
   </div>
 
+  <!-- Calendar -->
   <h2>📅 Availability Calendar</h2>
   <div id="calendar"></div>
 
+  <!-- Booking Form -->
   <div id="bookingSection">
     <h2>📝 Request Booking</h2>
     <form id="bookingForm">
@@ -145,13 +150,15 @@
     <p><a href="#" onclick="showAdmin(); return false;">👉 Admin Login</a></p>
   </div>
 
+  <!-- Manage Booking (Customer Cancellation) -->
   <div id="manageBooking" style="display:none;">
     <h2>🛠️ Manage Your Booking</h2>
     <div id="bookingDetails"></div>
     <button onclick="cancelBooking()" class="btn-delete">🗑️ Cancel Booking</button>
-    <p><a href="TULIP2.html">← Back to Availability</a></p>
+    <p><a href="TULIP1.html">← Back to Availability</a></p>
   </div>
 
+  <!-- Admin Panel -->
   <div id="adminPanel" style="display:none;">
     <h2>🔐 Admin Panel</h2>
     <input type="password" id="adminPass" placeholder="Enter Password" />
@@ -166,10 +173,12 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'unit2';
+    // ✅ Unique to TULIP1
+    const STORAGE_KEY = 'TULIPS1';
     const ADMIN_PASSWORD = 'admin123';
     let selectedDates = [];
 
+    // DOM Elements
     const calendar = document.getElementById('calendar');
     const statusDiv = document.getElementById('status');
     const bookingSection = document.getElementById('bookingSection');
@@ -179,6 +188,7 @@
     const adminContent = document.getElementById('adminContent');
     const adminPass = document.getElementById('adminPass');
 
+    // Get booking ID from URL: TULIP1.html?booking=123456789
     function getUrlParam(name) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(name);
@@ -206,37 +216,50 @@
       }
     }
 
+    // Generate 3-Month Calendar with Month Names
     function generateCalendar() {
       const today = new Date();
       const bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       calendar.innerHTML = '';
       const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
       for (let m = 0; m < 3; m++) {
         const monthDate = new Date(today.getFullYear(), today.getMonth() + m);
         const month = monthDate.getMonth();
         const year = monthDate.getFullYear();
+
+        // Month Header
         const monthHeader = document.createElement('h3');
         monthHeader.textContent = `${monthNames[month]} ${year}`;
         monthHeader.style = "margin: 20px 0 10px 0; color: #2c3e50;";
         calendar.appendChild(monthHeader);
+
+        // Table
         const table = document.createElement('table');
         const thead = document.createElement('thead');
         thead.innerHTML = '<tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr>';
         table.appendChild(thead);
+
         const tbody = document.createElement('tbody');
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         let row = document.createElement('tr');
+
+        // Empty cells before first day
         for (let i = 0; i < firstDay; i++) {
           const cell = document.createElement('td');
           cell.className = 'empty';
           row.appendChild(cell);
         }
+
+        // Days of the month
         for (let day = 1; day <= daysInMonth; day++) {
           const cell = document.createElement('td');
           cell.textContent = day;
+
           const dateObj = new Date(year, month, day);
           const dateStr = dateObj.toISOString().split('T')[0];
+
           if (dateObj < today && dateObj.setHours(0,0,0,0) < today.setHours(0,0,0,0)) {
             cell.className = 'past';
           } else {
@@ -266,32 +289,50 @@
             }
           }
           row.appendChild(cell);
+
           if ((day + firstDay) % 7 === 0 || day === daysInMonth) {
             tbody.appendChild(row);
             row = document.createElement('tr');
           }
         }
+
         table.appendChild(tbody);
         calendar.appendChild(table);
       }
     }
 
+    // Handle Booking Form
     document.getElementById('bookingForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const name = document.getElementById('name').value.trim();
       const phone = document.getElementById('phone').value.trim();
-      if (!name || !phone) { alert("Enter name and phone"); return; }
-      if (selectedDates.length === 0) { alert("Select dates"); return; }
+
+      if (!name || !phone) {
+        alert("Please enter your name and phone number.");
+        return;
+      }
+      if (selectedDates.length === 0) {
+        alert("Please select at least one date.");
+        return;
+      }
+
       const bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-      const newBooking = { id: Date.now(), name, phone, dates: selectedDates, status: 'pending' };
+      const newBooking = {
+        id: Date.now(),
+        name,
+        phone,
+        dates: selectedDates,
+        status: 'pending'
+      };
       bookings.push(newBooking);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
+
       statusDiv.innerHTML = `
-        <p>✅ Thank you, ${name}!</p>
+        <p>✅ Thank you, ${name}! Your booking is pending approval.</p>
         <div class="my-booking">
-          <strong>📌 Save this link:</strong><br>
-          <a href="TULIP2.html?booking=${newBooking.id}" style="color:#c0392b; font-weight:bold;">
-            TULIP2.html?booking=${newBooking.id}
+          <strong>📌 Save this link to manage your booking:</strong><br>
+          <a href="TULIP1.html?booking=${newBooking.id}" style="color:#c0392b; font-weight:bold;">
+            TULIP1.html?booking=${newBooking.id}
           </a>
         </div>
       `;
@@ -299,86 +340,119 @@
       generateCalendar();
     });
 
-    function showAdmin() { adminPanel.style.display = 'block'; }
+    // Admin Panel
+    function showAdmin() {
+      adminPanel.style.display = 'block';
+    }
     function checkPassword() {
       if (adminPass.value === ADMIN_PASSWORD) {
         adminPass.style.display = 'none';
         document.querySelector('#adminPanel button').style.display = 'none';
         adminContent.style.display = 'block';
         loadAllBookings();
-      } else { alert("❌ Wrong password!"); }
+      } else {
+        alert("❌ Wrong password!");
+      }
     }
     function logout() {
       adminContent.style.display = 'none';
       adminPass.style.display = 'block';
       adminPass.value = '';
       document.querySelector('#adminPanel button').style.display = 'inline-block';
-      alert("✅ Logged out.");
+      alert("✅ Admin logged out.");
     }
 
     function loadAllBookings() {
       const bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       const pending = bookings.filter(b => b.status === 'pending');
       const approved = bookings.filter(b => b.status === 'approved');
+
       const pendingDiv = document.getElementById('pendingList');
       pendingDiv.innerHTML = pending.length ? 
         pending.map(b => `
           <div><strong>${b.name}</strong> (${b.phone})<br>${b.dates.join(', ')}
           <button onclick="approve(${b.id})">✅ Approve</button>
           <button onclick="reject(${b.id})" class="btn-delete">🗑️</button><hr></div>
-        `).join('') : "<p>No pending.</p>";
+        `).join('') : "<p>No pending bookings.</p>";
+
       const approvedDiv = document.getElementById('approvedList');
       approvedDiv.innerHTML = approved.length ?
         approved.map(b => `
           <div><strong>✅ ${b.name}</strong><br>📞 ${b.phone}<br>📅 ${b.dates.join(', ')}
           <button onclick="unapprove(${b.id})" class="btn-delete">🗑️ Cancel</button><hr></div>
-        `).join('') : "<p>No approved.</p>";
+        `).join('') : "<p>No approved booking.</p>";
     }
 
+    // Approve Booking (Auto-Cancel Conflicting Pending)
     function approve(id) {
       let bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       const booking = bookings.find(b => b.id == id);
       if (!booking) return;
-      const conflict = bookings.some(b => b.status === 'approved' && b.dates.some(d => booking.dates.includes(d)));
-      if (conflict) { alert("❌ Already booked."); return; }
-      const others = bookings.filter(b => b.status === 'pending' && b.id != id && b.dates.some(d => booking.dates.includes(d)));
+
+      const conflict = bookings.some(b =>
+        b.status === 'approved' &&
+        b.dates.some(date => booking.dates.includes(date))
+      );
+      if (conflict) {
+        alert("❌ These dates are already booked.");
+        return;
+      }
+
+      const others = bookings.filter(b =>
+        b.status === 'pending' &&
+        b.id != id &&
+        b.dates.some(date => booking.dates.includes(date))
+      );
+
       booking.status = 'approved';
       bookings = bookings.filter(b => !others.some(o => o.id === b.id));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
-      alert(`✅ Approved: ${booking.name}\n❌ Canceled ${others.length} others.`);
-      loadAllBookings(); generateCalendar();
+
+      alert(`✅ Approved: ${booking.name}
+❌ Canceled ${others.length} other request(s).`);
+
+      loadAllBookings();
+      generateCalendar();
     }
 
+    // Delete Booking (Admin)
     function reject(id) {
       let bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       bookings = bookings.filter(b => b.id != id);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
-      alert("🗑️ Deleted.");
-      loadAllBookings(); generateCalendar();
+      alert("🗑️ Booking deleted.");
+      loadAllBookings();
+      generateCalendar();
     }
 
     function unapprove(id) {
       let bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       bookings = bookings.filter(b => b.id != id);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
-      alert("❌ Canceled.");
-      loadAllBookings(); generateCalendar();
+      alert("❌ Booking canceled.");
+      loadAllBookings();
+      generateCalendar();
     }
 
+    // Customer Cancel Booking
     function cancelBooking() {
       if (!bookingId) return;
       const bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       const booking = bookings.find(b => b.id == bookingId);
-      if (!booking) { alert("❌ Not found."); return; }
-      if (confirm(`Cancel booking for ${booking.dates.join(', ')}?`)) {
+      if (!booking) {
+        alert("❌ Booking not found or already canceled.");
+        return;
+      }
+      if (confirm(`Are you sure you want to cancel your booking for ${booking.dates.join(', ')}?`)) {
         const updated = bookings.filter(b => b.id != bookingId);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        alert("✅ Canceled.");
-        bookingDetails.innerHTML = "<p>Canceled.</p>";
+        alert("✅ Your booking has been canceled.");
+        bookingDetails.innerHTML = "<p>Your booking has been canceled.</p>";
         generateCalendar();
       }
     }
 
+    // Initialize
     generateCalendar();
   </script>
 </body>
