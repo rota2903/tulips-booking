@@ -1,4 +1,5 @@
-// Wait for DOM and flatpickr
+// js/main.js - Safe init with retry
+
 document.addEventListener("DOMContentLoaded", function () {
   const calendarEl = document.getElementById('calendar');
   if (!calendarEl) return;
@@ -10,11 +11,17 @@ document.addEventListener("DOMContentLoaded", function () {
   const statusDiv = document.getElementById('status');
 
   function initCalendar() {
+    if (!window.flatpickr) {
+      console.log("⏳ flatpickr not ready yet... retrying in 500ms");
+      setTimeout(initCalendar, 500);
+      return;
+    }
+
     if (calendarEl._flatpickr) calendarEl._flatpickr.destroy();
 
     const bookings = JSON.parse(localStorage.getItem(currentUnit) || "[]");
 
-    flatpickr(calendarEl, {
+    window.flatpickr(calendarEl, {
       mode: "range",
       inline: true,
       dateFormat: "Y-m-d",
@@ -26,6 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
       onDayCreate: (dObj, dStr, fp, dayElem) => {
         const dateStr = dObj.toISOString().split('T')[0];
         const today = new Date().toISOString().split('T')[0];
+
         if (dateStr < today) {
           dayElem.style.backgroundColor = "#ccc";
           dayElem.style.color = "#777";
@@ -44,6 +52,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
     });
+
+    console.log("✅ Calendar initialized!");
   }
 
   function loadCalendar() {
@@ -52,24 +62,38 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   unitSelect?.addEventListener('change', loadCalendar);
+
   form?.addEventListener('submit', function (e) {
     e.preventDefault();
     const name = document.getElementById('name').value.trim();
     const phone = document.getElementById('phone').value.trim();
+
     if (selectedDates.length === 0) {
-      alert("Select dates first");
+      alert("Please select dates first.");
       return;
     }
+
     const bookings = JSON.parse(localStorage.getItem(currentUnit) || "[]");
-    bookings.push({ id: Date.now(), name, phone, dates: selectedDates, status: 'pending' });
+    bookings.push({
+      id: Date.now(),
+      name,
+      phone,
+      dates: selectedDates,
+      status: 'pending'
+    });
     localStorage.setItem(currentUnit, JSON.stringify(bookings));
-    document.getElementById('status').innerHTML = `✅ Pending: ${name}`;
-    setTimeout(() => document.getElementById('status').style.display = "none", 3000);
+
+    statusDiv.style.display = "block";
+    statusDiv.innerHTML = `✅ Thank you, ${name}! Pending approval.`;
+    setTimeout(() => statusDiv.style.display = "none", 3000);
+
     loadCalendar();
   });
 
+  // Start initialization
   loadCalendar();
 
+  // Register PWA
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('service-worker.js');
   }
