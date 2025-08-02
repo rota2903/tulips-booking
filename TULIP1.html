@@ -13,7 +13,7 @@
       max-width: 800px;
       margin: 0 auto;
     }
-    h1, h2 {
+    h1, h2, h3 {
       color: #2c3e50;
     }
     .back-btn {
@@ -49,7 +49,11 @@
     .open { background: #2ecc71; color: white; cursor: pointer; }
     .pending { background: #f39c12; color: white; }
     .approved { background: #3498db; color: white; }
-    .empty { background: #fff; }
+    .approved:hover { 
+      position: relative; 
+      z-index: 1; 
+      transform: scale(1.1); 
+    }
     input, button {
       padding: 12px;
       margin: 10px 0;
@@ -103,6 +107,10 @@
       display: inline-block;
       border-radius: 3px;
     }
+    .booking-info {
+      font-size: 12px;
+      margin-top: 2px;
+    }
   </style>
 </head>
 <body>
@@ -144,7 +152,7 @@
       <h3>🕒 Pending Bookings</h3>
       <div id="pendingList"></div>
 
-      <h3>✅ Approved Bookings</h3>
+      <h3>✅ Approved Booking</h3>
       <div id="approvedList"></div>
 
       <p>
@@ -191,7 +199,11 @@
           const booking = bookings.find(b => b.dates.includes(dateStr));
           if (booking && booking.status === 'approved') {
             cell.className = 'approved';
-            cell.title = `Booked: ${booking.name}`;
+            cell.title = `Booked: ${booking.name}\nPhone: ${booking.phone}`;
+            const info = document.createElement('div');
+            info.className = 'booking-info';
+            info.textContent = booking.name;
+            cell.appendChild(info);
           } else if (booking && booking.status === 'pending') {
             cell.className = 'pending';
             cell.title = `Pending: ${booking.name}`;
@@ -301,13 +313,14 @@
       const approvedDiv = document.getElementById('approvedList');
       approvedDiv.innerHTML = "";
       if (approved.length === 0) {
-        approvedDiv.innerHTML = "<p>No approved bookings.</p>";
+        approvedDiv.innerHTML = "<p>No approved booking.</p>";
       } else {
         approved.forEach(b => {
           const item = document.createElement('div');
           item.innerHTML = `
-            <strong>${b.name}</strong> (${b.phone})<br>
-            ${b.dates.join(', ')}<br>
+            <strong>✅ ${b.name}</strong><br>
+            📞 ${b.phone}<br>
+            📅 ${b.dates.join(', ')}<br>
             <button onclick="unapprove(${b.id})" class="btn-delete">🗑️ Cancel Booking</button>
             <hr>
           `;
@@ -316,30 +329,55 @@
       }
     }
 
-    // Approve a pending booking
+    // ✅ Approve + Auto-Cancel Conflicting Pending Bookings
     function approve(id) {
       let bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-      const booking = bookings.find(b => b.id == id);
-      if (!booking) return;
+      const bookingToApprove = bookings.find(b => b.id == id);
+      if (!bookingToApprove) return;
 
-      const hasConflict = bookings.some(b =>
+      // Check if any dates are already approved (shouldn't happen, but safe)
+      const conflict = bookings.some(b =>
         b.status === 'approved' &&
-        b.dates.some(date => booking.dates.includes(date))
+        b.dates.some(date => bookingToApprove.dates.includes(date))
       );
 
-      if (hasConflict) {
-        alert("❌ Conflict: Dates already booked.");
+      if (conflict) {
+        alert("❌ These dates are already booked. Please refresh.");
+        loadAllBookings();
         return;
       }
 
-      booking.status = 'approved';
+      // Find all pending bookings that overlap with these dates
+      const overlappingPending = bookings.filter(b =>
+        b.status === 'pending' &&
+        b.id != id &&
+        b.dates.some(date => bookingToApprove.dates.includes(date))
+      );
+
+      // Approve the selected booking
+      bookingToApprove.status = 'approved';
+
+      // Remove all overlapping pending bookings
+      bookings = bookings.filter(b => {
+        if (b.status === 'pending' && overlappingPending.some(p => p.id === b.id)) {
+          return false; // remove
+        }
+        return true;
+      });
+
+      // Save updated list
       localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
-      alert("✅ Booking approved.");
+
+      // Feedback
+      const count = overlappingPending.length;
+      alert(`✅ Approved: ${bookingToApprove.name}\n${count > 0 ? `❌ Auto-canceled ${count} other request(s) for these dates.` : ''}`);
+
+      // Refresh UI
       loadAllBookings();
       generateCalendar();
     }
 
-    // Delete a pending booking (e.g., customer canceled)
+    // Delete a pending or approved booking
     function reject(id) {
       let bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       bookings = bookings.filter(b => b.id != id);
@@ -349,7 +387,6 @@
       generateCalendar();
     }
 
-    // Cancel an approved booking (e.g., customer canceled)
     function unapprove(id) {
       let bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       bookings = bookings.filter(b => b.id != id);
