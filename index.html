@@ -1,1 +1,91 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🏠 Housing Units Booking</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      padding: 40px;
+      background: #f0f4f8;
+      color: #333;
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    .logo {
+      font-size: 2.5em;
+      color: #3498db;
+      margin-bottom: 20px;
+    }
+    select {
+      padding: 14px;
+      font-size: 18px;
+      width: 100%;
+      max-width: 400px;
+      border: 2px solid #3498db;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      font-size: 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    .footer {
+      margin-top: 50px;
+      color: #7f8c8d;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">🏡</div>
+  <h1>Unit Booking System</h1>
+  <p>Select a unit to check availability and book:</p>
+
+  <select id="unitSelect">
+    <option value="">-- Choose a Unit --</option>
+    <option value="TULIP1.html">Unit 1</option>
+    <option value="TULIP2.html">Unit 2</option>
+    <option value="TULIP3.html">Unit 3</option>
+    <option value="TULIP4.html">Unit 4</option>
+    <option value="TULIP5.html">Unit 5</option>
+    <option value="TULIP6.html">Unit 6</option>
+    <option value="TULIP7.html">Unit 7</option>
+    <option value="TULIP8.html">Unit 8</option>
+    <option value="TULIP9.html">Unit 9</option>
+  </select>
+
+  <br>
+  <button onclick="openUnit()">Open Unit</button>
+
+  <div class="footer">
+    All bookings are managed offline. Keep all files in the same folder.
+  </div>
+
+  <script>
+    function openUnit() {
+      const file = document.getElementById('unitSelect').value;
+      if (!file) {
+        alert("Please select a unit");
+        return;
+      }
+      window.location.href = file;
+    }
+  </script>
+</body>
+</html>
