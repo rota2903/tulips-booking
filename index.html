@@ -3,13 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Housing Booking</title>
-  <link rel="manifest" href="data:application/json,{}" />
+  <title>Housing Unit Booking</title>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
       padding: 20px;
-      background: #f9f9f9;
+      background: #f8f9fa;
       color: #333;
       max-width: 800px;
       margin: 0 auto;
@@ -46,7 +45,6 @@
       margin: 5px;
       border-radius: 5px;
       cursor: pointer;
-      font-size: 16px;
     }
     button:hover { background: #219653; }
     #status {
@@ -56,19 +54,11 @@
       border-radius: 5px;
       display: none;
     }
-    #pendingList {
-      margin-top: 20px;
-      background: white;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .hidden { display: none !important; }
+    .hidden { display: none; }
   </style>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
-  <!-- Customer View -->
   <div id="customerView">
     <h1>🏡 Unit Booking</h1>
     <p><strong>Select unit:</strong></p>
@@ -89,17 +79,15 @@
 
     <h2>📝 Request Booking</h2>
     <form id="bookingForm">
-      <input type="text" id="name" placeholder="Your Name" required />
+      <input type="text" id="name" placeholder="Your Full Name" required />
       <input type="tel" id="phone" placeholder="Phone Number" required />
       <input type="hidden" id="dates" />
       <button type="submit">Request Booking</button>
     </form>
     <div id="status"></div>
-
     <p><a href="#" onclick="showAdmin(); return false;">👉 Admin Login</a></p>
   </div>
 
-  <!-- Admin Panel -->
   <div id="adminPanel" class="hidden">
     <h2>🔐 Admin Panel</h2>
     <input type="password" id="adminPass" placeholder="Enter Password" />
@@ -112,19 +100,12 @@
     </div>
   </div>
 
-  <!-- Load Flatpickr -->
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
-  <!-- All JavaScript in one place -->
   <script>
-    // Admin password
-    const ADMIN_PASSWORD = "admin123"; // 🔒 Change this later
-
-    // Global variables
+    const ADMIN_PASSWORD = "admin123";
     let selectedDates = [];
     let currentUnit = 'unit1';
 
-    // DOM elements
     const unitSelect = document.getElementById('unitSelect');
     const adminUnitSelect = document.getElementById('adminUnitSelect');
     const form = document.getElementById('bookingForm');
@@ -134,7 +115,6 @@
     const adminContent = document.getElementById('adminContent');
     const adminPass = document.getElementById('adminPass');
 
-    // Initialize unit selects
     for (let i = 1; i <= 9; i++) {
       const opt = document.createElement('option');
       opt.value = `unit${i}`;
@@ -142,19 +122,15 @@
       adminUnitSelect.appendChild(opt);
     }
 
-    // Retry init until flatpickr is ready
     function initCalendar() {
       if (!window.flatpickr) {
-        console.log("⏳ Waiting for flatpickr...");
         setTimeout(initCalendar, 300);
         return;
       }
-
       const calendarEl = document.getElementById('calendar');
       if (calendarEl._flatpickr) calendarEl._flatpickr.destroy();
 
       const bookings = JSON.parse(localStorage.getItem(currentUnit) || "[]");
-
       flatpickr(calendarEl, {
         mode: "range",
         inline: true,
@@ -210,33 +186,25 @@
         document.querySelector('#adminPanel button').classList.add('hidden');
         adminContent.classList.remove('hidden');
         loadPending();
-        document.getElementById('adminUnitSelect').addEventListener('change', loadPending);
+        adminUnitSelect.addEventListener('change', loadPending);
       } else {
         alert("❌ Wrong password!");
       }
     }
 
     function loadPending() {
-      const unit = document.getElementById('adminUnitSelect').value;
+      const unit = adminUnitSelect.value;
       const bookings = JSON.parse(localStorage.getItem(unit) || "[]");
       const pending = bookings.filter(b => b.status === 'pending');
       const div = document.getElementById('pendingList');
       div.innerHTML = "<h3>🕒 Pending Bookings</h3>";
-
       if (pending.length === 0) {
         div.innerHTML += "<p>No pending bookings.</p>";
         return;
       }
-
       pending.forEach(b => {
         const item = document.createElement('div');
-        item.innerHTML = `
-          <strong>${b.name}</strong> (${b.phone})<br>
-          ${b.dates.join(', ')}<br>
-          <button onclick="approve('${unit}', ${b.id})">✅ Approve</button>
-          <button onclick="reject('${unit}', ${b.id})">❌ Reject</button>
-          <hr>
-        `;
+        item.innerHTML = `<strong>${b.name}</strong> (${b.phone})<br>${b.dates.join(', ')}<br><button onclick="approve('${unit}', ${b.id})">✅ Approve</button> <button onclick="reject('${unit}', ${b.id})">❌ Reject</button><hr>`;
         div.appendChild(item);
       });
     }
@@ -245,17 +213,11 @@
       let bookings = JSON.parse(localStorage.getItem(unit) || "[]");
       const booking = bookings.find(b => b.id == id);
       if (!booking) return;
-
-      const hasConflict = bookings.some(b =>
-        b.status === 'approved' &&
-        b.dates.some(date => booking.dates.includes(date))
-      );
-
+      const hasConflict = bookings.some(b => b.status === 'approved' && b.dates.some(date => booking.dates.includes(date)));
       if (hasConflict) {
         alert("❌ Conflict: Dates already booked.");
         return;
       }
-
       booking.status = 'approved';
       localStorage.setItem(unit, JSON.stringify(bookings));
       alert("✅ Approved");
@@ -270,42 +232,25 @@
       loadPending();
     }
 
-    // Form submission
-    form.addEventListener('submit', function (e) {
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
       const name = document.getElementById('name').value.trim();
       const phone = document.getElementById('phone').value.trim();
-
       if (selectedDates.length === 0) {
         alert("Select dates first");
         return;
       }
-
       const bookings = JSON.parse(localStorage.getItem(currentUnit) || "[]");
-      bookings.push({
-        id: Date.now(),
-        name,
-        phone,
-        dates: selectedDates,
-        status: 'pending'
-      });
+      bookings.push({ id: Date.now(), name, phone, dates: selectedDates, status: 'pending' });
       localStorage.setItem(currentUnit, JSON.stringify(bookings));
-
       statusDiv.style.display = "block";
       statusDiv.innerHTML = `✅ Thank you, ${name}! Pending approval.`;
       setTimeout(() => statusDiv.style.display = "none", 3000);
-
       loadCalendar();
     });
 
-    // Initialize
     unitSelect.addEventListener('change', loadCalendar);
     loadCalendar();
-
-    // PWA
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js').catch(() => {});
-    }
   </script>
 </body>
 </html>
