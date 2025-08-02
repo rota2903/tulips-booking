@@ -66,6 +66,18 @@
     button:hover {
       background: #219653;
     }
+    .btn-delete {
+      background: #e74c3c !important;
+    }
+    .btn-delete:hover {
+      background: #c0392b !important;
+    }
+    .btn-logout {
+      background: #95a5a6 !important;
+    }
+    .btn-logout:hover {
+      background: #7f8c8d !important;
+    }
     #status {
       margin: 15px 0;
       padding: 10px;
@@ -129,8 +141,15 @@
     <button onclick="checkPassword()">Login</button>
 
     <div id="adminContent" style="display:none; margin-top:20px;">
+      <h3>🕒 Pending Bookings</h3>
       <div id="pendingList"></div>
-      <p><a href="#" onclick="logout(); return false;">← Back to Booking</a></p>
+
+      <h3>✅ Approved Bookings</h3>
+      <div id="approvedList"></div>
+
+      <p>
+        <button onclick="logout()" class="btn-logout">🔐 Logout</button>
+      </p>
     </div>
   </div>
 
@@ -159,7 +178,6 @@
         const cell = document.createElement('td');
         cell.textContent = d.getDate();
 
-        // Add empty cells for days before first day
         if (i === 0) {
           const dayOfWeek = d.getDay();
           for (let j = 0; j < dayOfWeek; j++) {
@@ -167,7 +185,6 @@
           }
         }
 
-        // Style based on status
         if (d < today && d.setHours(0,0,0,0) < today.setHours(0,0,0,0)) {
           cell.className = 'past';
         } else {
@@ -194,7 +211,6 @@
         }
         row.appendChild(cell);
 
-        // New row every Saturday or end
         if (d.getDay() === 6 || i === 89) {
           calendar.appendChild(row);
           row = document.createElement('tr');
@@ -232,7 +248,7 @@
       statusDiv.innerHTML = `✅ Thank you, ${name}! Your request is pending approval.`;
       setTimeout(() => statusDiv.style.display = "none", 3000);
 
-      generateCalendar(); // Refresh
+      generateCalendar();
     });
 
     // Admin Panel
@@ -244,39 +260,63 @@
         adminPass.style.display = 'none';
         document.querySelector('#adminPanel button').style.display = 'none';
         adminContent.style.display = 'block';
-        loadPending();
+        loadAllBookings();
       } else {
         alert("❌ Wrong password!");
       }
     }
     function logout() {
-      adminPanel.style.display = 'none';
       adminContent.style.display = 'none';
       adminPass.style.display = 'block';
       adminPass.value = '';
       document.querySelector('#adminPanel button').style.display = 'inline-block';
+      alert("✅ Admin logged out.");
     }
-    function loadPending() {
+
+    function loadAllBookings() {
       const bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       const pending = bookings.filter(b => b.status === 'pending');
-      const div = document.getElementById('pendingList');
-      div.innerHTML = "<h3>🕒 Pending Bookings</h3>";
+      const approved = bookings.filter(b => b.status === 'approved');
+
+      // Load Pending
+      const pendingDiv = document.getElementById('pendingList');
+      pendingDiv.innerHTML = "";
       if (pending.length === 0) {
-        div.innerHTML += "<p>No pending bookings.</p>";
-        return;
+        pendingDiv.innerHTML = "<p>No pending bookings.</p>";
+      } else {
+        pending.forEach(b => {
+          const item = document.createElement('div');
+          item.innerHTML = `
+            <strong>${b.name}</strong> (${b.phone})<br>
+            ${b.dates.join(', ')}<br>
+            <button onclick="approve(${b.id})">✅ Approve</button>
+            <button onclick="reject(${b.id})" class="btn-delete">🗑️ Delete</button>
+            <hr>
+          `;
+          pendingDiv.appendChild(item);
+        });
       }
-      pending.forEach(b => {
-        const item = document.createElement('div');
-        item.innerHTML = `
-          <strong>${b.name}</strong> (${b.phone})<br>
-          ${b.dates.join(', ')}<br>
-          <button onclick="approve(${b.id})">✅ Approve</button>
-          <button onclick="reject(${b.id})">❌ Reject</button>
-          <hr>
-        `;
-        div.appendChild(item);
-      });
+
+      // Load Approved
+      const approvedDiv = document.getElementById('approvedList');
+      approvedDiv.innerHTML = "";
+      if (approved.length === 0) {
+        approvedDiv.innerHTML = "<p>No approved bookings.</p>";
+      } else {
+        approved.forEach(b => {
+          const item = document.createElement('div');
+          item.innerHTML = `
+            <strong>${b.name}</strong> (${b.phone})<br>
+            ${b.dates.join(', ')}<br>
+            <button onclick="unapprove(${b.id})" class="btn-delete">🗑️ Cancel Booking</button>
+            <hr>
+          `;
+          approvedDiv.appendChild(item);
+        });
+      }
     }
+
+    // Approve a pending booking
     function approve(id) {
       let bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       const booking = bookings.find(b => b.id == id);
@@ -294,16 +334,28 @@
 
       booking.status = 'approved';
       localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
-      alert("✅ Approved");
-      loadPending();
+      alert("✅ Booking approved.");
+      loadAllBookings();
       generateCalendar();
     }
+
+    // Delete a pending booking (e.g., customer canceled)
     function reject(id) {
       let bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       bookings = bookings.filter(b => b.id != id);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
-      alert("❌ Rejected");
-      loadPending();
+      alert("🗑️ Booking deleted.");
+      loadAllBookings();
+      generateCalendar();
+    }
+
+    // Cancel an approved booking (e.g., customer canceled)
+    function unapprove(id) {
+      let bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      bookings = bookings.filter(b => b.id != id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
+      alert("❌ Booking canceled.");
+      loadAllBookings();
       generateCalendar();
     }
 
