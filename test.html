@@ -1,1 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Calendar Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+<body>
+  <h1>🔧 Calendar Test</h1>
+  <p>If you see a calendar below, we’re close!</p>
+  <div id="calendar" style="margin: 20px 0;"></div>
 
+  <!-- Load Flatpickr FIRST -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script>
+    // Initialize immediately after loading
+    document.addEventListener("DOMContentLoaded", function () {
+      flatpickr("#calendar", {
+        inline: true,
+        mode: "range",
+        dateFormat: "Y-m-d",
+        minDate: "today"
+      });
+      console.log("Calendar initialized");
+    });
+  </script>
+</body>
+</html>
