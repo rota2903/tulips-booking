@@ -6,7 +6,8 @@
   <title>Housing Booking</title>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css" />
+  <!-- Load Flatpickr CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
   <h1>🏡 Unit Booking</h1>
@@ -24,10 +25,7 @@
   </select>
 
   <h2>📅 Availability Calendar</h2>
-  <p>
-    🟢 Green = Open • 🟠 Orange = Pending • 🔵 Blue = Booked • ⚫ Gray = Past
-  </p>
-  <div id="calendar" style="max-width: 100%;"></div>
+  <div id="calendar" style="margin: 20px 0;"></div>
 
   <h2>📝 Request Booking</h2>
   <form id="bookingForm">
@@ -38,9 +36,9 @@
   </form>
   <div id="status"></div>
 
-  <!-- Load Flatpickr first -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
-  <!-- Then load your app -->
-  <script src="js/main.js" defer></script>
+  <!-- ✅ Load Flatpickr JS FIRST -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <!-- ✅ THEN load your app -->
+  <script src="js/main.js"></script>
 </body>
 </html>
