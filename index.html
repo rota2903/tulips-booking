@@ -3,104 +3,110 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Housing Unit Booking</title>
+  <title>Booking - Units 1-9</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: Arial, sans-serif;
       padding: 20px;
-      background: #f8f9fa;
-      color: #333;
-      max-width: 800px;
       margin: 0 auto;
+      max-width: 800px;
     }
-    h1, h2 { color: #27ae60; }
-    select {
-      padding: 10px;
-      font-size: 16px;
+    table {
       width: 100%;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      margin: 10px 0;
-    }
-    #calendar {
+      border-collapse: collapse;
       margin: 20px 0;
-      background: white;
-      border-radius: 8px;
-      padding: 15px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-    input[type="text"], input[type="tel"] {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
+    th {
+      background: #007bff;
+      color: white;
+      padding: 10px;
+    }
+    td {
+      text-align: center;
+      padding: 10px;
+      height: 50px;
+      width: 50px;
       border: 1px solid #ddd;
-      border-radius: 5px;
+    }
+    .past { background: #ccc; color: #777; }
+    .open { background: #2ecc71; color: white; }
+    .pending { background: #f39c12; color: white; }
+    .approved { background: #3498db; color: white; }
+    .empty { background: #fff; }
+    input, select, button {
+      padding: 10px;
+      margin: 10px 0;
+      width: 100%;
       font-size: 16px;
     }
-    button {
-      background: #27ae60;
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      margin: 5px;
-      border-radius: 5px;
-      cursor: pointer;
+    .legend {
+      margin: 20px 0;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
     }
-    button:hover { background: #219653; }
-    #status {
-      margin: 15px 0;
-      padding: 10px;
-      background: #d5f5e3;
-      border-radius: 5px;
-      display: none;
+    .legend div {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
     }
-    .hidden { display: none; }
+    .legend span {
+      width: 20px;
+      height: 20px;
+      margin-right: 5px;
+      display: inline-block;
+    }
   </style>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
-  <div id="customerView">
-    <h1>🏡 Unit Booking</h1>
-    <p><strong>Select unit:</strong></p>
-    <select id="unitSelect">
-      <option value="unit1">Unit 1</option>
-      <option value="unit2">Unit 2</option>
-      <option value="unit3">Unit 3</option>
-      <option value="unit4">Unit 4</option>
-      <option value="unit5">Unit 5</option>
-      <option value="unit6">Unit 6</option>
-      <option value="unit7">Unit 7</option>
-      <option value="unit8">Unit 8</option>
-      <option value="unit9">Unit 9</option>
-    </select>
+  <h1>🏡 Unit Booking</h1>
+  <p><strong>Select unit:</strong></p>
+  <select id="unitSelect">
+    <option value="unit1">Unit 1</option>
+    <option value="unit2">Unit 2</option>
+    <option value="unit3">Unit 3</option>
+    <option value="unit4">Unit 4</option>
+    <option value="unit5">Unit 5</option>
+    <option value="unit6">Unit 6</option>
+    <option value="unit7">Unit 7</option>
+    <option value="unit8">Unit 8</option>
+    <option value="unit9">Unit 9</option>
+  </select>
 
-    <h2>📅 Availability Calendar</h2>
-    <div id="calendar"></div>
-
-    <h2>📝 Request Booking</h2>
-    <form id="bookingForm">
-      <input type="text" id="name" placeholder="Your Full Name" required />
-      <input type="tel" id="phone" placeholder="Phone Number" required />
-      <input type="hidden" id="dates" />
-      <button type="submit">Request Booking</button>
-    </form>
-    <div id="status"></div>
-    <p><a href="#" onclick="showAdmin(); return false;">👉 Admin Login</a></p>
+  <div class="legend">
+    <div><span style="background:#2ecc71"></span> Available</div>
+    <div><span style="background:#f39c12"></span> Pending</div>
+    <div><span style="background:#3498db"></span> Booked</div>
+    <div><span style="background:#ccc"></span> Past</div>
   </div>
 
-  <div id="adminPanel" class="hidden">
+  <h2>📅 Availability Calendar</h2>
+  <table id="calendar">
+    <tr><th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th></tr>
+  </table>
+
+  <h2>📝 Request Booking</h2>
+  <form id="bookingForm">
+    <input type="text" id="name" placeholder="Your Full Name" required />
+    <input type="tel" id="phone" placeholder="Phone Number" required />
+    <input type="hidden" id="dates" />
+    <button type="submit">Request Booking</button>
+  </form>
+  <div id="status"></div>
+
+  <p><a href="#" onclick="showAdmin(); return false;">👉 Admin Login</a></p>
+
+  <div id="adminPanel" style="display:none; margin-top:20px;">
     <h2>🔐 Admin Panel</h2>
     <input type="password" id="adminPass" placeholder="Enter Password" />
     <button onclick="checkPassword()">Login</button>
-    <div id="adminContent" class="hidden">
+    <div id="adminContent" style="display:none;">
       <p><strong>Select Unit:</strong></p>
       <select id="adminUnitSelect"></select>
       <div id="pendingList"></div>
-      <p><a href="#" onclick="logout(); return false;">← Back to Booking</a></p>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script>
     const ADMIN_PASSWORD = "admin123";
     let selectedDates = [];
@@ -110,147 +116,163 @@
     const adminUnitSelect = document.getElementById('adminUnitSelect');
     const form = document.getElementById('bookingForm');
     const statusDiv = document.getElementById('status');
-    const customerView = document.getElementById('customerView');
+    const calendar = document.getElementById('calendar');
     const adminPanel = document.getElementById('adminPanel');
     const adminContent = document.getElementById('adminContent');
     const adminPass = document.getElementById('adminPass');
 
-    for (let i = 1; i <= 9; i++) {
-      const opt = document.createElement('option');
-      opt.value = `unit${i}`;
-      opt.textContent = `Unit ${i}`;
-      adminUnitSelect.appendChild(opt);
-    }
-
-    function initCalendar() {
-      if (!window.flatpickr) {
-        setTimeout(initCalendar, 300);
-        return;
-      }
-      const calendarEl = document.getElementById('calendar');
-      if (calendarEl._flatpickr) calendarEl._flatpickr.destroy();
-
+    // Generate calendar for next 3 months
+    function generateCalendar() {
+      const today = new Date();
       const bookings = JSON.parse(localStorage.getItem(currentUnit) || "[]");
-      flatpickr(calendarEl, {
-        mode: "range",
-        inline: true,
-        dateFormat: "Y-m-d",
-        minDate: "today",
-        onChange: (dates, dateStr) => {
-          selectedDates = dates.map(d => d.toISOString().split('T')[0]);
-          document.getElementById('dates').value = dateStr;
-        },
-        onDayCreate: (dObj, dStr, fp, dayElem) => {
-          const dateStr = dObj.toISOString().split('T')[0];
-          const today = new Date().toISOString().split('T')[0];
-          if (dateStr < today) {
-            dayElem.style.backgroundColor = "#ccc";
-            dayElem.style.color = "#777";
-          } else {
-            const booking = bookings.find(b => b.dates.includes(dateStr));
-            if (booking && booking.status === 'approved') {
-              dayElem.style.backgroundColor = "#3498db";
-              dayElem.style.color = "white";
-            } else if (booking && booking.status === 'pending') {
-              dayElem.style.backgroundColor = "#f39c12";
-              dayElem.style.color = "white";
-            } else {
-              dayElem.style.backgroundColor = "#2ecc71";
-              dayElem.style.color = "white";
-            }
+      calendar.innerHTML = '<tr><th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th></tr>';
+      let row = document.createElement('tr');
+
+      // Start from today, show 90 days
+      for (let i = 0; i < 90; i++) {
+        const d = new Date();
+        d.setDate(today.getDate() + i);
+        const dateStr = d.toISOString().split('T')[0];
+
+        const cell = document.createElement('td');
+        cell.textContent = d.getDate();
+
+        if (i === 0) {
+          // First day
+          const dayOfWeek = d.getDay();
+          for (let j = 0; j < dayOfWeek; j++) {
+            row.appendChild(document.createElement('td'));
           }
         }
-      });
+
+        const booking = bookings.find(b => b.dates.includes(dateStr));
+        if (d < today && d.setHours(0,0,0,0) < today.setHours(0,0,0,0)) {
+          cell.className = 'past';
+        } else if (booking && booking.status === 'approved') {
+          cell.className = 'approved';
+          cell.title = `Booked: ${booking.name}`;
+        } else if (booking && booking.status === 'pending') {
+          cell.className = 'pending';
+          cell.title = `Pending: ${booking.name}`;
+        } else {
+          cell.className = 'open';
+          cell.style.cursor = 'pointer';
+          cell.onclick = () => {
+            if (selectedDates.includes(dateStr)) {
+              selectedDates = selectedDates.filter(d => d !== dateStr);
+              cell.style.opacity = '1';
+            } else {
+              selectedDates.push(dateStr);
+              cell.style.opacity = '0.5';
+            }
+            document.getElementById('dates').value = selectedDates.join(', ');
+          };
+        }
+
+        row.appendChild(cell);
+        if ((d.getDay() === 6) || i === 89) {
+          calendar.appendChild(row);
+          row = document.createElement('tr');
+        }
+      }
     }
 
-    function loadCalendar() {
+    unitSelect.addEventListener('change', () => {
       currentUnit = unitSelect.value;
-      initCalendar();
-    }
+      selectedDates = [];
+      generateCalendar();
+    });
 
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+
+      if (selectedDates.length === 0) {
+        alert("Please select at least one date.");
+        return;
+      }
+
+      const bookings = JSON.parse(localStorage.getItem(currentUnit) || "[]");
+      bookings.push({
+        id: Date.now(),
+        name,
+        phone,
+        dates: selectedDates,
+        status: 'pending'
+      });
+      localStorage.setItem(currentUnit, JSON.stringify(bookings));
+
+      statusDiv.style.display = "block";
+      statusDiv.innerHTML = `✅ Thank you, ${name}! Your request is pending.`;
+      setTimeout(() => statusDiv.style.display = "none", 3000);
+
+      generateCalendar();
+    });
+
+    // Admin
     function showAdmin() {
-      customerView.classList.add('hidden');
-      adminPanel.classList.remove('hidden');
+      adminPanel.style.display = 'block';
     }
-
-    function logout() {
-      adminPanel.classList.add('hidden');
-      customerView.classList.remove('hidden');
-      adminContent.classList.add('hidden');
-      adminPass.value = '';
-    }
-
     function checkPassword() {
       if (adminPass.value === ADMIN_PASSWORD) {
-        adminPass.classList.add('hidden');
-        document.querySelector('#adminPanel button').classList.add('hidden');
-        adminContent.classList.remove('hidden');
+        adminPass.style.display = 'none';
+        document.querySelector('#adminPanel button').style.display = 'none';
+        adminContent.style.display = 'block';
         loadPending();
+        adminUnitSelect.innerHTML = '';
+        for (let i = 1; i <= 9; i++) {
+          const opt = document.createElement('option');
+          opt.value = `unit${i}`;
+          opt.textContent = `Unit ${i}`;
+          adminUnitSelect.appendChild(opt);
+        }
         adminUnitSelect.addEventListener('change', loadPending);
       } else {
         alert("❌ Wrong password!");
       }
     }
-
     function loadPending() {
       const unit = adminUnitSelect.value;
       const bookings = JSON.parse(localStorage.getItem(unit) || "[]");
       const pending = bookings.filter(b => b.status === 'pending');
       const div = document.getElementById('pendingList');
-      div.innerHTML = "<h3>🕒 Pending Bookings</h3>";
+      div.innerHTML = "<h3>Pending Bookings</h3>";
       if (pending.length === 0) {
         div.innerHTML += "<p>No pending bookings.</p>";
         return;
       }
       pending.forEach(b => {
         const item = document.createElement('div');
-        item.innerHTML = `<strong>${b.name}</strong> (${b.phone})<br>${b.dates.join(', ')}<br><button onclick="approve('${unit}', ${b.id})">✅ Approve</button> <button onclick="reject('${unit}', ${b.id})">❌ Reject</button><hr>`;
+        item.innerHTML = `<strong>${b.name}</strong> (${b.phone})<br>${b.dates.join(', ')}<br><button onclick="approve('${unit}', ${b.id})">Approve</button> <button onclick="reject('${unit}', ${b.id})">Reject</button><hr>`;
         div.appendChild(item);
       });
     }
-
     function approve(unit, id) {
       let bookings = JSON.parse(localStorage.getItem(unit) || "[]");
       const booking = bookings.find(b => b.id == id);
       if (!booking) return;
-      const hasConflict = bookings.some(b => b.status === 'approved' && b.dates.some(date => booking.dates.includes(date)));
+      const hasConflict = bookings.some(b => b.status === 'approved' && b.dates.some(d => booking.dates.includes(d)));
       if (hasConflict) {
-        alert("❌ Conflict: Dates already booked.");
+        alert("Conflict: Dates already booked.");
         return;
       }
       booking.status = 'approved';
       localStorage.setItem(unit, JSON.stringify(bookings));
-      alert("✅ Approved");
+      alert("Approved");
       loadPending();
+      if (unit === currentUnit) generateCalendar();
     }
-
     function reject(unit, id) {
       let bookings = JSON.parse(localStorage.getItem(unit) || "[]");
       bookings = bookings.filter(b => b.id != id);
       localStorage.setItem(unit, JSON.stringify(bookings));
-      alert("❌ Rejected");
+      alert("Rejected");
       loadPending();
     }
 
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const name = document.getElementById('name').value.trim();
-      const phone = document.getElementById('phone').value.trim();
-      if (selectedDates.length === 0) {
-        alert("Select dates first");
-        return;
-      }
-      const bookings = JSON.parse(localStorage.getItem(currentUnit) || "[]");
-      bookings.push({ id: Date.now(), name, phone, dates: selectedDates, status: 'pending' });
-      localStorage.setItem(currentUnit, JSON.stringify(bookings));
-      statusDiv.style.display = "block";
-      statusDiv.innerHTML = `✅ Thank you, ${name}! Pending approval.`;
-      setTimeout(() => statusDiv.style.display = "none", 3000);
-      loadCalendar();
-    });
-
-    unitSelect.addEventListener('change', loadCalendar);
-    loadCalendar();
+    // Init
+    generateCalendar();
   </script>
 </body>
 </html>
