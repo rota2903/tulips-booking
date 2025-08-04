@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TULIP 3 Booking</title>
+  <title>TULIP 2: B8-3A-3</title>
   <style>
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -49,9 +49,15 @@
     .open { background: #2ecc71; color: white; cursor: pointer; }
     .pending { background: #f39c12; color: white; }
     .approved { background: #3498db; color: white; }
-    .approved:hover { 
-      position: relative; 
-      z-index: 1; 
+    .locked { background: #95a5a6; color: white; } /* Locked by admin */
+    .selected { 
+      background: #e67e22 !important; 
+      color: white; 
+      position: relative;
+      transform: scale(1.1);
+      z-index: 5;
+    }
+    .approved:hover, .locked:hover, .selected:hover { 
       transform: scale(1.1); 
     }
     input, button {
@@ -117,26 +123,49 @@
       border-radius: 5px;
       margin: 15px 0;
     }
+    .prices {
+      background: #e8f4f8;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      font-size: 14px;
+    }
+    .prices h4 {
+      margin: 10px 0 5px 0;
+      color: #2c3e50;
+    }
   </style>
 </head>
 <body>
-  <!-- Back to Dashboard -->
+  <!-- Back to Dashboard Button -->
   <a href="index.html" class="back-btn">← Back to Dashboard</a>
-
-  <h1>🏡 TULIP 3 Booking</h1>
-
-  <!-- Availability Legend -->
+  <h1>🏡 TULIP 2: B8-3A-3</h1>
+  <!-- Price Information -->
+  <div class="prices">
+    <h4>💰 Pricing (Per Night)</h4>
+    <strong>Non-School Holidays:</strong>
+    <ul>
+      <li>Daily: RM160</li>
+      <li>Weekend (Fri-Sun): RM230</li>
+      <li>Peak Weekend (Fri-Sun): RM250</li>
+    </ul>
+    <strong>School Holidays:</strong>
+    <ul>
+      <li>Daily: RM180</li>
+      <li>Weekend (Fri-Sun): RM250</li>
+      <li>Peak Weekend (Fri-Sun): RM280</li>
+    </ul>
+    <p><strong>Discount Price:</strong> Contact admin for special rates.</p>
+  </div>
   <div class="legend">
     <div><span style="background:#2ecc71"></span>Available</div>
     <div><span style="background:#f39c12"></span>Pending</div>
     <div><span style="background:#3498db"></span>Booked</div>
+    <div><span style="background:#95a5a6"></span>Locked</div>
     <div><span style="background:#ccc"></span>Past</div>
   </div>
-
-  <!-- Calendar -->
   <h2>📅 Availability Calendar</h2>
   <div id="calendar"></div>
-
   <!-- Booking Form -->
   <div id="bookingSection">
     <h2>📝 Request Booking</h2>
@@ -149,15 +178,13 @@
     <div id="status"></div>
     <p><a href="#" onclick="showAdmin(); return false;">👉 Admin Login</a></p>
   </div>
-
-  <!-- Manage Booking (Customer Cancellation) -->
+  <!-- Manage Booking UI -->
   <div id="manageBooking" style="display:none;">
     <h2>🛠️ Manage Your Booking</h2>
     <div id="bookingDetails"></div>
     <button onclick="cancelBooking()" class="btn-delete">🗑️ Cancel Booking</button>
-    <p><a href="TULIP3.html">← Back to Availability</a></p>
+    <p><a href="TULIP2.html">← Back to Availability</a></p>
   </div>
-
   <!-- Admin Panel -->
   <div id="adminPanel" style="display:none;">
     <h2>🔐 Admin Panel</h2>
@@ -168,18 +195,21 @@
       <div id="pendingList"></div>
       <h3>✅ Approved Booking</h3>
       <div id="approvedList"></div>
+      <h3>🔒 Lock/Unlock Dates</h3>
+      <p><strong>Tap dates on the calendar to select/unselect</strong></p>
+      <button onclick="lockSelectedDates()" style="background:#e67e22">🔒 Lock Selected Dates</button>
+      <button onclick="unlockSelectedDates()" style="background:#95a5a6">🔓 Unlock Selected Dates</button>
+      <div id="adminCalendar"></div> <!-- Admin-only enhanced calendar -->
       <p><button onclick="logout()" class="btn-logout">🔐 Logout</button></p>
     </div>
   </div>
-
   <script>
-    // ✅ Unique to TULIP 3
-    const STORAGE_KEY = 'TULIPS3';
+    const STORAGE_KEY = 'unit3';
     const ADMIN_PASSWORD = 'admin123';
-    let selectedDates = [];
-
-    // DOM Elements
+    let selectedDates = []; // For customer booking
+    let adminSelectedDates = []; // For admin lock/unlock
     const calendar = document.getElementById('calendar');
+    const adminCalendar = document.getElementById('adminCalendar');
     const statusDiv = document.getElementById('status');
     const bookingSection = document.getElementById('bookingSection');
     const manageBooking = document.getElementById('manageBooking');
@@ -188,12 +218,13 @@
     const adminContent = document.getElementById('adminContent');
     const adminPass = document.getElementById('adminPass');
 
-    // Get booking ID from URL: TULIP3.html?booking=123456789
+    // Parse URL parameter: ?booking=123456789
     function getUrlParam(name) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(name);
     }
 
+    // Check if we're in "manage booking" mode
     const bookingId = getUrlParam('booking');
     if (bookingId) {
       bookingSection.style.display = 'none';
@@ -212,101 +243,167 @@
           </p>
         `;
       } else {
-        bookingDetails.innerHTML = `<p style="color:red;">❌ Booking not found.</p>`;
+        bookingDetails.innerHTML = `<p style="color:red;">❌ Booking not found. It may have been canceled.</p>`;
       }
     }
 
-    // Generate 3-Month Calendar with Month Names
+    // Generate 3-month calendar (for customer)
     function generateCalendar() {
       const today = new Date();
       const bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      const lockedDates = JSON.parse(localStorage.getItem(`${STORAGE_KEY}_locked`) || "[]");
       calendar.innerHTML = '';
-      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       for (let m = 0; m < 3; m++) {
         const monthDate = new Date(today.getFullYear(), today.getMonth() + m);
         const month = monthDate.getMonth();
         const year = monthDate.getFullYear();
-
-        // Month Header
         const monthHeader = document.createElement('h3');
         monthHeader.textContent = `${monthNames[month]} ${year}`;
         monthHeader.style = "margin: 20px 0 10px 0; color: #2c3e50;";
         calendar.appendChild(monthHeader);
-
-        // Table
         const table = document.createElement('table');
         const thead = document.createElement('thead');
         thead.innerHTML = '<tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr>';
         table.appendChild(thead);
-
         const tbody = document.createElement('tbody');
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         let row = document.createElement('tr');
-
-        // Empty cells before first day
         for (let i = 0; i < firstDay; i++) {
           const cell = document.createElement('td');
           cell.className = 'empty';
           row.appendChild(cell);
         }
-
-        // Days of the month
         for (let day = 1; day <= daysInMonth; day++) {
           const cell = document.createElement('td');
           cell.textContent = day;
-
           const dateObj = new Date(year, month, day);
           const dateStr = dateObj.toISOString().split('T')[0];
-
           if (dateObj < today && dateObj.setHours(0,0,0,0) < today.setHours(0,0,0,0)) {
             cell.className = 'past';
           } else {
-            const booking = bookings.find(b => b.dates.includes(dateStr));
-            if (booking && booking.status === 'approved') {
-              cell.className = 'approved';
-              cell.title = `Booked: ${booking.name}`;
-              const info = document.createElement('div');
-              info.className = 'booking-info';
-              info.textContent = booking.name;
-              cell.appendChild(info);
-            } else if (booking && booking.status === 'pending') {
-              cell.className = 'pending';
-              cell.title = `Pending: ${booking.name}`;
+            if (lockedDates.includes(dateStr)) {
+              cell.className = 'locked';
+              cell.title = "Locked by admin";
             } else {
-              cell.className = 'open';
-              cell.onclick = () => {
-                if (selectedDates.includes(dateStr)) {
-                  selectedDates = selectedDates.filter(d => d !== dateStr);
-                  cell.style.opacity = '1';
-                } else {
-                  selectedDates.push(dateStr);
-                  cell.style.opacity = '0.5';
-                }
-                document.getElementById('dates').value = selectedDates.join(', ');
-              };
+              const booking = bookings.find(b => b.dates.includes(dateStr));
+              if (booking && booking.status === 'approved') {
+                cell.className = 'approved';
+                cell.title = `Booked: ${booking.name}`;
+                const info = document.createElement('div');
+                info.className = 'booking-info';
+                info.textContent = booking.name;
+                cell.appendChild(info);
+              } else if (booking && booking.status === 'pending') {
+                cell.className = 'pending';
+                cell.title = `Pending: ${booking.name}`;
+              } else {
+                cell.className = 'open';
+                cell.onclick = () => {
+                  if (selectedDates.includes(dateStr)) {
+                    selectedDates = selectedDates.filter(d => d !== dateStr);
+                    cell.style.opacity = '1';
+                  } else {
+                    selectedDates.push(dateStr);
+                    cell.style.opacity = '0.5';
+                  }
+                  document.getElementById('dates').value = selectedDates.join(', ');
+                };
+              }
             }
           }
           row.appendChild(cell);
-
           if ((day + firstDay) % 7 === 0 || day === daysInMonth) {
             tbody.appendChild(row);
             row = document.createElement('tr');
           }
         }
-
         table.appendChild(tbody);
         calendar.appendChild(table);
       }
     }
 
-    // Handle Booking Form
+    // Generate Admin-Only Calendar (with tap-to-select)
+    function generateAdminCalendar() {
+      const today = new Date();
+      const bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      const lockedDates = JSON.parse(localStorage.getItem(`${STORAGE_KEY}_locked`) || "[]");
+      adminCalendar.innerHTML = '';
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      for (let m = 0; m < 3; m++) {
+        const monthDate = new Date(today.getFullYear(), today.getMonth() + m);
+        const month = monthDate.getMonth();
+        const year = monthDate.getFullYear();
+        const monthHeader = document.createElement('h3');
+        monthHeader.textContent = `${monthNames[month]} ${year}`;
+        monthHeader.style = "margin: 20px 0 10px 0; color: #2c3e50;";
+        adminCalendar.appendChild(monthHeader);
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        thead.innerHTML = '<tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr>';
+        table.appendChild(thead);
+        const tbody = document.createElement('tbody');
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        let row = document.createElement('tr');
+        for (let i = 0; i < firstDay; i++) {
+          const cell = document.createElement('td');
+          cell.className = 'empty';
+          row.appendChild(cell);
+        }
+        for (let day = 1; day <= daysInMonth; day++) {
+          const cell = document.createElement('td');
+          cell.textContent = day;
+          const dateObj = new Date(year, month, day);
+          const dateStr = dateObj.toISOString().split('T')[0];
+          if (dateObj < today && dateObj.setHours(0,0,0,0) < today.setHours(0,0,0,0)) {
+            cell.className = 'past';
+          } else {
+            if (lockedDates.includes(dateStr)) {
+              cell.className = 'locked';
+              cell.title = "Locked";
+            } else {
+              const booking = bookings.find(b => b.dates.includes(dateStr));
+              if (booking && booking.status === 'approved') {
+                cell.className = 'approved';
+                cell.title = `Booked: ${booking.name}`;
+              } else if (booking && booking.status === 'pending') {
+                cell.className = 'pending';
+                cell.title = `Pending: ${booking.name}`;
+              } else {
+                cell.className = 'open';
+              }
+            }
+          }
+          // Admin tap to select
+          cell.onclick = () => {
+            if (cell.classList.contains('selected')) {
+              cell.classList.remove('selected');
+              adminSelectedDates = adminSelectedDates.filter(d => d !== dateStr);
+            } else {
+              cell.classList.add('selected');
+              adminSelectedDates.push(dateStr);
+            }
+          };
+          row.appendChild(cell);
+          if ((day + firstDay) % 7 === 0 || day === daysInMonth) {
+            tbody.appendChild(row);
+            row = document.createElement('tr');
+          }
+        }
+        table.appendChild(tbody);
+        adminCalendar.appendChild(table);
+      }
+    }
+
+    // Form submission
     document.getElementById('bookingForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const name = document.getElementById('name').value.trim();
       const phone = document.getElementById('phone').value.trim();
-
       if (!name || !phone) {
         alert("Please enter your name and phone number.");
         return;
@@ -315,8 +412,13 @@
         alert("Please select at least one date.");
         return;
       }
-
       const bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      const lockedDates = JSON.parse(localStorage.getItem(`${STORAGE_KEY}_locked`) || "[]");
+      const isLocked = selectedDates.some(date => lockedDates.includes(date));
+      if (isLocked) {
+        alert("❌ One or more selected dates are locked and cannot be booked.");
+        return;
+      }
       const newBooking = {
         id: Date.now(),
         name,
@@ -326,14 +428,14 @@
       };
       bookings.push(newBooking);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
-
       statusDiv.innerHTML = `
         <p>✅ Thank you, ${name}! Your booking is pending approval.</p>
         <div class="my-booking">
           <strong>📌 Save this link to manage your booking:</strong><br>
           <a href="TULIP3.html?booking=${newBooking.id}" style="color:#c0392b; font-weight:bold;">
             TULIP3.html?booking=${newBooking.id}
-          </a>
+          </a><br>
+          <small>You can cancel or view your booking using this link.</small>
         </div>
       `;
       statusDiv.style.display = "block";
@@ -350,6 +452,7 @@
         document.querySelector('#adminPanel button').style.display = 'none';
         adminContent.style.display = 'block';
         loadAllBookings();
+        generateAdminCalendar(); // Load admin calendar
       } else {
         alert("❌ Wrong password!");
       }
@@ -360,62 +463,105 @@
       adminPass.value = '';
       document.querySelector('#adminPanel button').style.display = 'inline-block';
       alert("✅ Admin logged out.");
+      adminSelectedDates = [];
+      generateCalendar();
     }
-
     function loadAllBookings() {
       const bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       const pending = bookings.filter(b => b.status === 'pending');
       const approved = bookings.filter(b => b.status === 'approved');
-
       const pendingDiv = document.getElementById('pendingList');
-      pendingDiv.innerHTML = pending.length ? 
-        pending.map(b => `
-          <div><strong>${b.name}</strong> (${b.phone})<br>${b.dates.join(', ')}
-          <button onclick="approve(${b.id})">✅ Approve</button>
-          <button onclick="reject(${b.id})" class="btn-delete">🗑️</button><hr></div>
-        `).join('') : "<p>No pending bookings.</p>";
-
+      pendingDiv.innerHTML = "";
+      if (pending.length === 0) {
+        pendingDiv.innerHTML = "<p>No pending bookings.</p>";
+      } else {
+        pending.forEach(b => {
+          const item = document.createElement('div');
+          item.innerHTML = `
+            <strong>${b.name}</strong> (${b.phone})<br>
+            ${b.dates.join(', ')}<br>
+            <button onclick="approve(${b.id})">✅ Approve</button>
+            <button onclick="reject(${b.id})" class="btn-delete">🗑️ Delete</button>
+            <hr>
+          `;
+          pendingDiv.appendChild(item);
+        });
+      }
       const approvedDiv = document.getElementById('approvedList');
-      approvedDiv.innerHTML = approved.length ?
-        approved.map(b => `
-          <div><strong>✅ ${b.name}</strong><br>📞 ${b.phone}<br>📅 ${b.dates.join(', ')}
-          <button onclick="unapprove(${b.id})" class="btn-delete">🗑️ Cancel</button><hr></div>
-        `).join('') : "<p>No approved booking.</p>";
+      approvedDiv.innerHTML = "";
+      if (approved.length === 0) {
+        approvedDiv.innerHTML = "<p>No approved booking.</p>";
+      } else {
+        approved.forEach(b => {
+          const item = document.createElement('div');
+          item.innerHTML = `
+            <strong>✅ ${b.name}</strong><br>
+            📞 ${b.phone}<br>
+            📅 ${b.dates.join(', ')}<br>
+            <button onclick="unapprove(${b.id})" class="btn-delete">🗑️ Cancel Booking</button>
+            <hr>
+          `;
+          approvedDiv.appendChild(item);
+        });
+      }
     }
-
-    // Approve Booking (Auto-Cancel Conflicting Pending)
-    function approve(id) {
-      let bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-      const booking = bookings.find(b => b.id == id);
-      if (!booking) return;
-
-      const conflict = bookings.some(b =>
-        b.status === 'approved' &&
-        b.dates.some(date => booking.dates.includes(date))
-      );
-      if (conflict) {
-        alert("❌ These dates are already booked.");
+    // Admin: Lock selected dates
+    function lockSelectedDates() {
+      if (adminSelectedDates.length === 0) {
+        alert("Please select dates to lock.");
         return;
       }
-
-      const others = bookings.filter(b =>
+      const lockedDates = JSON.parse(localStorage.getItem(`${STORAGE_KEY}_locked`) || "[]");
+      const newLocked = [...new Set([...lockedDates, ...adminSelectedDates])];
+      localStorage.setItem(`${STORAGE_KEY}_locked`, JSON.stringify(newLocked));
+      alert(`✅ Locked ${adminSelectedDates.length} date(s).`);
+      adminSelectedDates = [];
+      generateCalendar();
+      generateAdminCalendar(); // Refresh
+    }
+    // Admin: Unlock selected dates
+    function unlockSelectedDates() {
+      if (adminSelectedDates.length === 0) {
+        alert("Please select dates to unlock.");
+        return;
+      }
+      let lockedDates = JSON.parse(localStorage.getItem(`${STORAGE_KEY}_locked`) || "[]");
+      lockedDates = lockedDates.filter(d => !adminSelectedDates.includes(d));
+      localStorage.setItem(`${STORAGE_KEY}_locked`, JSON.stringify(lockedDates));
+      alert(`🔓 Unlocked ${adminSelectedDates.length} date(s).`);
+      adminSelectedDates = [];
+      generateCalendar();
+      generateAdminCalendar();
+    }
+    // Approve + Auto-Cancel Conflicting Pending
+    function approve(id) {
+      let bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      const bookingToApprove = bookings.find(b => b.id == id);
+      if (!bookingToApprove) return;
+      const conflict = bookings.some(b =>
+        b.status === 'approved' &&
+        b.dates.some(date => bookingToApprove.dates.includes(date))
+      );
+      if (conflict) {
+        alert("❌ Dates already booked.");
+        loadAllBookings();
+        return;
+      }
+      const overlappingPending = bookings.filter(b =>
         b.status === 'pending' &&
         b.id != id &&
-        b.dates.some(date => booking.dates.includes(date))
+        b.dates.some(date => bookingToApprove.dates.includes(date))
       );
-
-      booking.status = 'approved';
-      bookings = bookings.filter(b => !others.some(o => o.id === b.id));
+      bookingToApprove.status = 'approved';
+      bookings = bookings.filter(b => {
+        return !overlappingPending.some(p => p.id === b.id);
+      });
       localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
-
-      alert(`✅ Approved: ${booking.name}
-❌ Canceled ${others.length} other request(s).`);
-
+      alert(`✅ Approved: ${bookingToApprove.name}
+${overlappingPending.length} request(s) canceled.`);
       loadAllBookings();
       generateCalendar();
     }
-
-    // Delete Booking (Admin)
     function reject(id) {
       let bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       bookings = bookings.filter(b => b.id != id);
@@ -424,7 +570,6 @@
       loadAllBookings();
       generateCalendar();
     }
-
     function unapprove(id) {
       let bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       bookings = bookings.filter(b => b.id != id);
@@ -433,8 +578,6 @@
       loadAllBookings();
       generateCalendar();
     }
-
-    // Customer Cancel Booking
     function cancelBooking() {
       if (!bookingId) return;
       const bookings = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
@@ -451,7 +594,6 @@
         generateCalendar();
       }
     }
-
     // Initialize
     generateCalendar();
   </script>
