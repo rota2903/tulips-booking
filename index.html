@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+)<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -71,16 +71,15 @@
   <a href="https://rota2903.github.io/tulips-vacation-ch" class="back-btn">
     ← Return to Vacation Home
   </a>
-
   <script>
-    function openUnit() {
-      const selected = document.getElementById('unitSelect').value;
-      if (selected) {
-        alert("You selected: " + selected + "\n\nIn a real system, this would open a booking form.\nCurrently, this is a demo.");
-      } else {
-        alert("Please select a unit first.");
-      }
+  function openUnit() {
+    const unit = document.getElementById("unitSelect").value;
+    if (unit) {
+      window.open(unit, '_blank');
+    } else {
+      alert("Please select a unit first.");
     }
-  </script>
+  }
+</script>
 </body>
 </html>
