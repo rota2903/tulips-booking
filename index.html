@@ -1,85 +1,53 @@
-)<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TULIPS Booking System</title>
+  <title>Tulips Vacation CH</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
-      padding: 40px;
+      padding: 50px;
       background: #f0f4f8;
       color: #333;
+      margin: 0;
     }
-    h1 {
+    h2 {
       color: #2c3e50;
     }
-    select, button {
-      padding: 10px;
-      font-size: 16px;
-      margin: 10px;
-      width: 250px;
+    p {
+      font-size: 18px;
+      color: #555;
+      max-width: 700px;
+      margin: 0 auto 20px;
     }
-    button {
-      background-color: #0077cc;
-      color: white;
-      border: none;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    button:hover {
-      background-color: #005fa3;
-    }
-    .back-btn {
+    .btn {
       display: inline-block;
-      margin-top: 30px;
       padding: 12px 24px;
-      background-color: #555;
+      font-size: 16px;
+      font-weight: bold;
       color: white;
+      background-color: #0077cc;
       text-decoration: none;
       border-radius: 6px;
-      font-size: 16px;
+      margin-top: 15px;
     }
-    .back-btn:hover {
-      background-color: #333;
+    .btn:hover {
+      background-color: #005fa3;
     }
   </style>
 </head>
 <body>
-  <h1>TULIPS Booking System</h1>
-  <p>Select a unit to check availability and book:</p>
-  
-  <select id="unitSelect">
-    <option value="">-- Choose a Unit --</option>
-    <option>TULIP 1: B8-3-5</option>
-    <option>TULIP 2: B8-3-11</option>
-    <option>TULIP 3: B8-3A-3</option>
-    <option>TULIP 4: B8-3A-3A</option>
-    <option>TULIP 5: B8-3A-11</option>
-    <option>TULIP 6: Semi-D No.11</option>
-    <option>TULIP 7: Semi-D No.14</option>
-    <option>TULIP 8: Terrace No.3</option>
-    <option>TULIP 9: Terrace No.18</option>
-  </select>
+  <h2>Our 9 Vacation Units</h2>
+  <p>
+    Choose from 4 cozy houses and 5 modern apartments. 
+    Each unit offers a relaxing stay with beautiful views.
+  </p>
 
-  <br>
-  <button onclick="openUnit()">Open Unit</button>
-
-  <!-- ✅ New: Back to Landing Page -->
-  <br><br>
-  <a href="https://rota2903.github.io/tulips-vacation-ch" class="back-btn">
-    ← Return to Vacation Home
+  <!-- Fixed: Now a clickable, styled button -->
+  <a href="https://rota2903.github.io/tulips-booking/" target="_blank" class="btn">
+    Go to Booking Page
   </a>
-  <script>
-  function openUnit() {
-    const unit = document.getElementById("unitSelect").value;
-    if (unit) {
-      window.open(unit, '_blank');
-    } else {
-      alert("Please select a unit first.");
-    }
-  }
-</script>
 </body>
 </html>
