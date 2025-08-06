@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🏠 TULIPS HOMESTAY Booking</title>
+  <title>TULIPS Booking System</title>
   <style>
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -56,34 +56,31 @@
   <h1>TULIPS Booking System</h1>
   <p>Select a unit to check availability and book:</p>
 
-  <select id="unitSelect">
+  <select id="unitSelect" onchange="goToForm()">
     <option value="">-- Choose a Unit --</option>
-    <option value="TULIP1.html">TULIP 1: B8-3-5</option>
-    <option value="TULIP2.html">TULIP 2: B8-3-11</option>
-    <option value="TULIP3.html">TULIP 3: B8-3A-3</option>
-    <option value="TULIP4.html">TULIP 4: B8-3A-3A</option>
-    <option value="TULIP5.html">TULIP 5: B8-3A-11</option>
-    <option value="TULIP6.html">TULIP 6: Semi-D No.11</option>
-    <option value="TULIP7.html">TULIP 7: Semi-D No.14</option>
-    <option value="TULIP8.html">TULIP 8: Terrace No.3</option>
-    <option value="TULIP9.html">TULIP 9: Terrace No.18</option>
+    <option value="form.html">TULIP 1: B8-3-5</option>
+    <option value="form.html">TULIP 2: B8-3-11</option>
+    <option value="form.html">TULIP 3: B8-3A-3</option>
+    <option value="form.html">TULIP 4: B8-3A-3A</option>
+    <option value="form.html">TULIP 5: B8-3A-11</option>
+    <option value="form.html">TULIP 6: Semi-D No.11</option>
+    <option value="form.html">TULIP 7: Semi-D No.14</option>
+    <option value="form.html">TULIP 8: Terrace No.3</option>
+    <option value="form.html">TULIP 9: Terrace No.18</option>
   </select>
 
-  <br>
-  <button onclick="openUnit()">Open Unit</button>
-
   <div class="footer">
-    All bookings are managed offline. Keep all files in the same folder.
+    All bookings are managed online. You will receive a confirmation email.
   </div>
 
   <script>
-    function openUnit() {
-      const file = document.getElementById('unitSelect').value;
-      if (!file) {
-        alert("Please select a unit");
-        return;
+    function goToForm() {
+      const unit = document.getElementById("unitSelect").value;
+      if (unit) {
+        // Pre-fill unit in form (optional enhancement)
+        localStorage.setItem("selectedUnit", unit.split('"')[0]);
+        window.location.href = unit;
       }
-      window.open(file, '_blank'); // Opens in new tab
     }
   </script>
 </body>
