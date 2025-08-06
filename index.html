@@ -53,14 +53,12 @@
   <script>
     function openUnit() {
       const selected = document.getElementById('unitSelect').value;
-      if (selected !== '-- Choose a Unit --' && selected) {
-        // Create a WhatsApp message
-        const message = `Hi, I would like to book ${selected}. Can you help me with availability?`;
-        const whatsappUrl = `https://wa.me/60123456789?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank');
-      } else {
+      if (selected === '-- Choose a Unit --' || !selected) {
         alert('Please select a unit first.');
+        return;
       }
+      // For now, just show a message
+      alert('You selected: ' + selected + '\n\nNow you can proceed to book this unit.\n(Add your booking form or instructions here.)');
     }
   </script>
 </body>
